@@ -3,14 +3,12 @@ SQLAlchemy database models.
 """
 
 from sqlalchemy import Boolean, Column, Integer, String
-from sqlalchemy.orm import declarative_base
-
 # Use the new way to declare base for SQLAlchemy 2.0+
-# from sqlalchemy.orm import DeclarativeBase
-# class Base(DeclarativeBase):
-#     pass
+from sqlalchemy.orm import DeclarativeBase
+class Base(DeclarativeBase):
+    pass
 # For compatibility with potentially older setups or examples, using legacy base
-Base = declarative_base()
+# Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
