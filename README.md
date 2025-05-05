@@ -1,0 +1,103 @@
+# DPP4.0 MVP Workshop - Refined Version
+
+This repository contains the refined Minimum Viable Product (MVP) for a Digital Product Passport (DPP) system based on the original `DPP40-MVP-Workshop` repository. This version addresses several issues, implements key features like the Carbon Footprint submodel and a validation framework, and includes a basic authentication system.
+
+## Project Overview
+
+The goal of this project is to demonstrate a DPP system using Asset Administration Shells (AAS) and the Eclipse BaSyx Python SDK. This refined MVP focuses on providing a more robust and functional baseline.
+
+## Key Changes and Enhancements
+
+*   **Dependency Management:** Switched to Poetry for dependency management. Fixed missing dependencies (`email-validator`, `networkx`, `matplotlib`, `psycopg2-binary`, `python-jose`, `passlib[bcrypt]`, `qrcode`). Updated Python version requirement to `>=3.10`.
+*   **BaSyx SDK Integration:** Corrected issues with AAS and AssetInformation instantiation.
+*   **Carbon Footprint Submodel:** Implemented the structure for the Carbon Footprint submodel based on the IDTA-02023-0-9 specification.
+*   **Validation Framework:** Added a validation framework using Pydantic to validate submodel data against defined schemas (initial implementation for Carbon Footprint).
+*   **Authentication System:** Implemented a JWT-based authentication system with a database backend for user management (using SQLAlchemy and SQLite by default).
+*   **Visualization Endpoints:** Implemented several visualization endpoints (`/api/v1/aas/visualization/...`) using `networkx` and `matplotlib` to generate lifecycle, value chain, digital twin, QR code, and submodel visualizations. These endpoints replace previously non-functional ones.
+*   **Code Structure:** Refactored imports and structure for better organization (e.g., created `auth`, `db`, `validation` modules).
+*   **Testing:** Added unit and integration tests (using pytest) for key components, particularly the new visualization endpoints. Test setup uses mocking to avoid requiring a live database during basic checks.
+*   **Dockerfile:** Included a Dockerfile (`deployment/Dockerfile`) for containerizing the application.
+
+## Setup and Installation
+
+### Prerequisites
+
+*   Python >= 3.10
+*   Poetry (Python dependency management tool)
+*   Git
+
+### Local Setup (using Poetry)
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/hadijannat/DPP40-MVP-Workshop-3.git
+    cd DPP40-MVP-Workshop-3
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    # Ensure Poetry is installed: https://python-poetry.org/docs/#installation
+    poetry install --with dev 
+    ```
+    *Note: `--with dev` includes development dependencies like pytest.* 
+
+3.  **Environment Variables:**
+    The application uses environment variables for configuration (see `src/core/config.py`). Key variables include:
+    *   `DATABASE_URL`: SQLAlchemy database connection string (defaults to SQLite: `sqlite:///./dpp40_mvp.db`)
+    *   `SECRET_KEY`: Secret key for JWT token generation (generate a strong random key).
+    *   `ALGORITHM`: JWT algorithm (e.g., `HS256`).
+    *   `ACCESS_TOKEN_EXPIRE_MINUTES`: Token expiry time.
+    *   `LOG_LEVEL`: Logging level (e.g., `INFO`, `DEBUG`).
+
+    You can set these variables in your environment or create a `.env` file in the project root.
+
+4.  **Run the application:**
+    ```bash
+    # Using uvicorn directly (requires uvicorn installation: poetry add uvicorn)
+    uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+    
+    # Or using poetry run
+    poetry run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+    ```
+    The API will be available at `http://localhost:8000`.
+    API documentation (Swagger UI): `http://localhost:8000/api/v1/docs`
+
+### Docker Setup
+
+1.  **Build the Docker image:**
+    ```bash
+    docker build -t dpp40-mvp-refined -f deployment/Dockerfile .
+    ```
+
+2.  **Run the Docker container:**
+    ```bash
+    docker run -d -p 8000:8000 \
+      -e SECRET_KEY="your_strong_secret_key" \
+      -e DATABASE_URL="sqlite:///./dpp40_mvp.db" \
+      --name dpp40-app \
+      dpp40-mvp-refined
+    ```
+    *Replace `your_strong_secret_key` with a secure key.* 
+    *You can change the `DATABASE_URL` if you want to use PostgreSQL (ensure the container can reach the DB).* 
+
+    The application will be accessible at `http://localhost:8000`.
+
+## Basic Usage
+
+*   **Authentication:** Obtain a JWT token by sending a POST request to `/api/v1/auth/token` with username (email) and password in form data. Include the obtained token in the `Authorization: Bearer <token>` header for protected endpoints.
+*   **Creating DPPs:** Send a POST request to `/api/v1/aas/shells` with the DPP data (see endpoint documentation in Swagger UI for schema).
+*   **Retrieving DPPs:** Send a GET request to `/api/v1/aas/shells/{aas_id_b64}`.
+*   **Visualizations:** Access the visualization endpoints under `/api/v1/aas/visualization/...` (e.g., `/api/v1/aas/visualization/lifecycle/{aas_id_b64}?format=png`).
+
+## Known Limitations
+
+*   **Database:** Defaults to SQLite for simplicity. For production, configure a robust database like PostgreSQL via the `DATABASE_URL` environment variable.
+*   **RBAC:** The Role-Based Access Control (RBAC) implementation is basic and primarily uses placeholder logic in dependencies. A full implementation would require defining roles/permissions and checking them properly.
+*   **Testing:** Tests primarily focus on endpoint existence and basic functionality, especially for visualization. Database interactions are often mocked. More comprehensive tests are needed for production readiness.
+*   **Error Handling:** While improved, error handling can be further refined, especially for edge cases.
+*   **Submodel Implementation:** Only the Carbon Footprint submodel structure is implemented based on the specification. Data population and validation logic are basic.
+
+## Contributing
+
+Contributions are welcome. Please refer to the original repository's contribution guidelines if available, or open an issue to discuss changes.
+
