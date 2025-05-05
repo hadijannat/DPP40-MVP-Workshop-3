@@ -1,0 +1,1289 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Digital Product Passport 4.0 MVP",
+    "description": "A demonstration of Digital Product Passports using Asset Administration Shell",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Basic health check endpoint - returns system status",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/auth/token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login for access token",
+        "description": "Exchange username (email) and password for a JWT access token",
+        "operationId": "login_for_access_token_api_v1_aas_auth_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_for_access_token_api_v1_aas_auth_token_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "422": {
+            "description": "Validation Error"
+          }
+        }
+      }
+    },
+    "/api/v1/aas/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get current user info",
+        "description": "Get information about the currently authenticated user",
+        "operationId": "read_users_me_api_v1_aas_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "422": {
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/aas/shells": {
+      "get": {
+        "tags": [
+          "Shells"
+        ],
+        "summary": "List all Digital Product Passports",
+        "description": "Returns a list of all available Digital Product Passports with basic information",
+        "operationId": "list_dpps_api_v1_aas_shells_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Maximum number of results to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Maximum number of results to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of results to skip",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Number of results to skip"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional search term to filter results",
+              "title": "Search"
+            },
+            "description": "Optional search term to filter results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AASShellList"
+                  },
+                  "title": "Response List Dpps Api V1 Aas Shells Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Shell not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Shells"
+        ],
+        "summary": "Create a new Digital Product Passport",
+        "description": "Creates a new Digital Product Passport with the provided information.\n    \n    For PET bottle passports, include realistic technical specifications:\n    - Density: 1380 kg/m\u00b3 (typical for PET bottles)\n    - Melt Flow Index: 36.7 cm\u00b3/10min (with test conditions \"275\u00b0C/2.16kg, ISO 1133\")\n    - Recycled Content: 25% for compliance with EU SUPD 2025 target\n    \n    Example Request Body:\n    ```json\n    {\n      \"id_short\": \"PETBottle_25pcRecycled\",\n      \"nameplate\": {\n        \"manufacturer_name\": \"EcoBottles GmbH\",\n        \"product_designation\": \"rPET Beverage Container\",\n        \"year_of_construction\": \"2023\",\n        \"serial_number\": \"ECO-PET-2023-001\"\n      },\n      \"technical_data\": {\n        \"density\": 1380.0,\n        \"melt_flow_index\": 36.7,\n        \"test_conditions\": \"275\u00b0C/2.16kg, ISO 1133\",\n        \"melt_temperature\": 270.0,\n        \"mold_temperature\": 10.0,\n        \"max_operating_temperature\": 65.0\n      },\n      \"material_composition\": {\n        \"material_name\": \"Recycled PET\",\n        \"polymer_type\": \"PET\",\n        \"recycled_content\": 25.0,\n        \"bio_based_content\": 0.0,\n        \"material_color\": \"Clear\",\n        \"material_source\": \"Post-consumer waste (ISO 14021 compliant)\",\n        \"additives\": [\n          {\n            \"name\": \"UV Stabilizer\",\n            \"function\": \"Prevent UV degradation\",\n            \"percentage\": 0.5\n          },\n          {\n            \"name\": \"Reheat Additive\",\n            \"function\": \"Improve IR energy absorption for blow molding\",\n            \"percentage\": 0.02\n          }\n        ]\n      }\n    }\n    ```",
+        "operationId": "create_dpp_api_v1_aas_shells_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AASShellCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AASShellResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Shell not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/shells/{aas_id_b64}": {
+      "get": {
+        "tags": [
+          "Shells"
+        ],
+        "summary": "Get a specific Digital Product Passport",
+        "description": "Returns detailed information about a specific Digital Product Passport.\n    \n    The response includes the full AAS structure with all submodels and their semantic IDs. \n    For PET bottle passports, this will include:\n    \n    - Nameplate information (manufacturer, product designation, etc.)\n    - Technical data (density, melt flow index, processing temperatures)\n    - Material composition with ISO 14021 compliant recycled content\n    - Additives information\n    - Circularity data including end-of-life instructions\n    \n    Note that the available data will be filtered based on the user's role.",
+        "operationId": "get_dpp_api_v1_aas_shells__aas_id_b64__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AASShellResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Shell not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Shells"
+        ],
+        "summary": "Delete a Digital Product Passport",
+        "description": "Deletes a specific Digital Product Passport by its ID. This operation cannot be undone.",
+        "operationId": "delete_dpp_api_v1_aas_shells__aas_id_b64__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Shell not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/shells/{aas_id_b64}/submodels/{submodel_id_short}": {
+      "get": {
+        "tags": [
+          "Submodels"
+        ],
+        "summary": "Get a specific submodel from a Digital Product Passport",
+        "description": "Returns detailed information about a specific submodel in a Digital Product Passport.\n    \n    Each submodel represents a specific aspect of the product information:\n    \n    - **Nameplate**: Contains manufacturer information, product designation, serial numbers, etc.\n      For PET bottles, this includes manufacturer name, product designation, and production year.\n    \n    - **TechnicalData**: Contains technical and physical properties.\n      For PET bottles, this includes properties like:\n      * Density (1380 kg/m\u00b3)\n      * Melt Flow Index (36.7 cm\u00b3/10min measured at 275\u00b0C/2.16kg per ISO 1133)\n      * Processing temperatures (270\u00b0C melt, 10\u00b0C mold for transparency)\n      * Physical dimensions and weight\n    \n    - **MaterialComposition**: Contains detailed material information and additives.\n      For PET bottles, includes:\n      * Recycled content (25% to meet EU SUPD 2025 target, ISO 14021 compliant)\n      * Material color and source\n      * Additives like UV stabilizers (0.5%) and reheat additives (0.02%)\n    \n    - **CircularityData**: Contains information on recyclability, repairability, and end-of-life.\n      For PET bottles, includes end-of-life instructions and recycled content percentage.\n    \n    Each property in the response includes semantic IDs that link to standard definitions \n    in dictionaries like ECLASS and IEC CDD, ensuring interoperability across different systems.",
+        "operationId": "get_submodel_api_v1_aas_shells__aas_id_b64__submodels__submodel_id_short__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          },
+          {
+            "name": "submodel_id_short",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Short ID of the submodel",
+              "title": "Submodel Id Short"
+            },
+            "description": "Short ID of the submodel"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmodelResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Submodel not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/shells/{aas_id_b64}/submodels/": {
+      "get": {
+        "tags": [
+          "Submodels"
+        ],
+        "summary": "List all submodels in a Digital Product Passport",
+        "description": "Returns a list of all available submodel references in a Digital Product Passport.\n    \n    A complete DPP for a PET bottle typically includes these submodels:\n    \n    - **Nameplate**: Basic product identification (IDTA-02006-2-0)\n    - **TechnicalData**: Physical and processing properties (IDTA-02003-1-2)\n    - **MaterialComposition**: Material information with recycled content\n    - **CircularityData**: End-of-life and recyclability information\n    \n    Note that the available submodels will be filtered based on the user's role,\n    in accordance with EU ESPR role-based data access principles. For example:\n    - A **Recycler** role will see material and circularity submodels\n    - A **Consumer** role will see basic product information\n    - A **Manufacturer** role will see all submodels",
+        "operationId": "list_submodels_api_v1_aas_shells__aas_id_b64__submodels__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "title": "Response List Submodels Api V1 Aas Shells  Aas Id B64  Submodels  Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Submodel not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/visualization/lifecycle/{aas_id_b64}": {
+      "get": {
+        "tags": [
+          "Visualization"
+        ],
+        "summary": "Get lifecycle visualization for a DPP",
+        "description": "Returns a visualization of the product lifecycle stages",
+        "operationId": "get_lifecycle_visualization_api_v1_aas_visualization_lifecycle__aas_id_b64__get",
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Output format (png, svg, json)",
+              "default": "png",
+              "title": "Format"
+            },
+            "description": "Output format (png, svg, json)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/visualization/value-chain/{aas_id_b64}": {
+      "get": {
+        "tags": [
+          "Visualization"
+        ],
+        "summary": "Get value chain visualization for a DPP",
+        "description": "Returns a visualization of the product value chain",
+        "operationId": "get_value_chain_visualization_api_v1_aas_visualization_value_chain__aas_id_b64__get",
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Output format (png, svg, json)",
+              "default": "png",
+              "title": "Format"
+            },
+            "description": "Output format (png, svg, json)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/visualization/digital-twin/{aas_id_b64}": {
+      "get": {
+        "tags": [
+          "Visualization"
+        ],
+        "summary": "Get digital twin visualization for a DPP",
+        "description": "Returns a visualization of the digital twin structure",
+        "operationId": "get_digital_twin_visualization_api_v1_aas_visualization_digital_twin__aas_id_b64__get",
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Output format (png, svg, json)",
+              "default": "png",
+              "title": "Format"
+            },
+            "description": "Output format (png, svg, json)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/visualization/qrcode/{aas_id_b64}": {
+      "get": {
+        "tags": [
+          "Visualization"
+        ],
+        "summary": "Get QR code for a DPP",
+        "description": "Returns a QR code for accessing the DPP",
+        "operationId": "get_qrcode_api_v1_aas_visualization_qrcode__aas_id_b64__get",
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "QR code size in pixels",
+              "default": 200,
+              "title": "Size"
+            },
+            "description": "QR code size in pixels"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/aas/visualization/submodel/{aas_id_b64}/{submodel_id_short}": {
+      "get": {
+        "tags": [
+          "Visualization"
+        ],
+        "summary": "Get visualization for a specific submodel",
+        "description": "Returns a visualization of a specific submodel",
+        "operationId": "get_submodel_visualization_api_v1_aas_visualization_submodel__aas_id_b64___submodel_id_short__get",
+        "parameters": [
+          {
+            "name": "aas_id_b64",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Base64-encoded identifier of the AAS Shell",
+              "title": "Aas Id B64"
+            },
+            "description": "Base64-encoded identifier of the AAS Shell"
+          },
+          {
+            "name": "submodel_id_short",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Short ID of the submodel",
+              "title": "Submodel Id Short"
+            },
+            "description": "Short ID of the submodel"
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Output format (png, svg, json)",
+              "default": "png",
+              "title": "Format"
+            },
+            "description": "Output format (png, svg, json)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Web"
+        ],
+        "summary": "Home",
+        "description": "Serve the home page.",
+        "operationId": "home__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dpp-list.html": {
+      "get": {
+        "tags": [
+          "Web"
+        ],
+        "summary": "Dpp List",
+        "description": "Serve the DPP list page.",
+        "operationId": "dpp_list_dpp_list_html_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dpp-detail.html": {
+      "get": {
+        "tags": [
+          "Web"
+        ],
+        "summary": "Dpp Detail",
+        "description": "Serve the DPP detail page.",
+        "operationId": "dpp_detail_dpp_detail_html_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AASShellCreate": {
+        "properties": {
+          "idShort": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "ID Short",
+            "description": "Short ID for the AAS Shell",
+            "examples": [
+              "PlasticBottle_001"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "idShort"
+        ],
+        "title": "AASShellCreate",
+        "description": "Schema for creating a new AAS Shell."
+      },
+      "AASShellList": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Globally unique AAS Shell identifier (base64)"
+          },
+          "idShort": {
+            "type": "string",
+            "title": "Idshort",
+            "description": "Human-readable Shell identifier"
+          },
+          "created": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created",
+            "description": "Creation timestamp"
+          },
+          "modified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modified",
+            "description": "Last modification timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "idShort"
+        ],
+        "title": "AASShellList",
+        "description": "Schema for items in the AAS Shell list response."
+      },
+      "AASShellResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Globally unique AAS Shell identifier (base64)"
+          },
+          "idShort": {
+            "type": "string",
+            "title": "Idshort",
+            "description": "Human-readable Shell identifier"
+          },
+          "created": {
+            "type": "string",
+            "title": "Created",
+            "description": "Creation timestamp"
+          },
+          "modified": {
+            "type": "string",
+            "title": "Modified",
+            "description": "Last modification timestamp"
+          },
+          "submodels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Submodels",
+            "description": "List of submodel idShorts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "idShort",
+          "created",
+          "modified",
+          "submodels"
+        ],
+        "title": "AASShellResponse",
+        "description": "Schema for detailed AAS Shell response."
+      },
+      "Body_login_for_access_token_api_v1_aas_auth_token_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "password"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_for_access_token_api_v1_aas_auth_token_post"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "SubmodelElementValue": {
+        "properties": {
+          "idShort": {
+            "type": "string",
+            "title": "Idshort",
+            "description": "Short identifier for the element"
+          },
+          "valueType": {
+            "type": "string",
+            "title": "Valuetype",
+            "description": "Value type of the element (e.g., string, int, float)"
+          },
+          "value": {
+            "title": "Value",
+            "description": "Actual value of the element"
+          }
+        },
+        "type": "object",
+        "required": [
+          "idShort",
+          "valueType",
+          "value"
+        ],
+        "title": "SubmodelElementValue",
+        "description": "Schema for submodel element values in the response."
+      },
+      "SubmodelResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Globally unique submodel identifier"
+          },
+          "idShort": {
+            "type": "string",
+            "title": "Idshort",
+            "description": "Human-readable submodel identifier"
+          },
+          "semanticId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semanticid",
+            "description": "Semantic ID reference for the submodel"
+          },
+          "elements": {
+            "items": {
+              "$ref": "#/components/schemas/SubmodelElementValue"
+            },
+            "type": "array",
+            "title": "Elements",
+            "description": "List of submodel elements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "idShort",
+          "elements"
+        ],
+        "title": "SubmodelResponse",
+        "description": "Schema for detailed submodel response."
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type"
+        ],
+        "title": "Token"
+      },
+      "User": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User's email address (used as username)"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "User's full name"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether the user account is active",
+            "default": true
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser",
+            "description": "Whether the user has superuser privileges",
+            "default": false
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "description": "Unique user ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "id"
+        ],
+        "title": "User"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/api/v1/auth/token"
+          }
+        }
+      }
+    }
+  }
+}
