@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "dpp40-mvp"
+version = "1.0.2"
+description = "Digital Product Passport 4.0 MVP using Eclipse BaSyx Python SDK"
+authors = ["Hadi Jannatabadi <h.jannatabadi@iat.rwth-aachen.de>"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+basyx-python-sdk = "^1.2.0"
+fastapi = {extras = ["all"], version = "^0.104.1"}
+uvicorn = "^0.23.2"
+pydantic = "^2.4.2"
+pydantic-settings = "^2.0.3"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+qrcode = "^7.4.2"
+pillow = "^10.1.0"
+sqlalchemy = "^2.0.40"
+python-multipart = "^0.0.20"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+httpx = "^0.24.1"
+email-validator = "^2.2.0"
+networkx = "^3.4.2"
+matplotlib = "^3.10.1"
+psycopg2-binary = "^2.9.10"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-asyncio = "^0.23.0"
+black = "^23.10.1"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+pytest-cov = "^6.1.1"
+mypy = "^1.15.0"
+pre-commit = "^4.2.0"
+
+[tool.poetry.scripts]
+test = "pytest"
+test-coverage = "pytest --cov=src --cov-report=term-missing --cov-report=xml"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# Configure pytest to use importlib mode and add coverage configuration
+addopts = "--import-mode=importlib --cov-report=term-missing" 
